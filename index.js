@@ -72,7 +72,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
         const emailContent = `
         <div style="font-family: Courier, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #38005e; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
-                <h1 style="font-family: Verdana, sans-serif;">Welcome to Our School!</h1>
+                <h1 style="font-family: Verdana, sans-serif;">Welcome to Our Online TIME-KEEPER!</h1>
             </div>
             
             <div style="padding: 20px; background-color: #ffffff; border: 1px solid #dddddd;">
@@ -80,7 +80,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                     Dear ${studentData.name},
                 </div>
                 
-                <p>Congratulations on successfully registering as a student! We're excited to have you join our academic community.</p>
+                <p>Congratulations on successfully registering as a student! We're excited to have you join our easy access database.</p>
                 
                 <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
                     <h2>Your Registration Details</h2>
@@ -101,22 +101,12 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                     </div>
                 </div>
 
-                <p>Please keep these credentials safe and change your password upon your first login.</p>
-                
-                <p>To get started:</p>
-                <ol>
-                    <li>Visit our student portal: <a style="color:#6b018b; text-decoration: none; font-weight: 800;" href="https://next-gen-permss.netlify.app/">Next Generation Permission</a></li>
-                    <li>Please use Google Chrome Browser.</li>
-                    <li>Log in with your email and password.</li>
-                    <li>You can use Google Sign-In (Note: Don't fill up the username and password—just hit the login).</li>
-                    <li>You can use your registered NFC Card by tapping it on your supported device (Note: Not applicable on iOS devices).</li>
-                    <li>Update your password.</li>
-                </ol>
+                <p>Please keep these and also update your section every end of semester.</p>
 
                 <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
 
                 <div style="text-align: center; margin-top: 20px; color: #666666;">
-                    <p>Best regards,<br>Team Loigasm</p>
+                    <p>Best regards,<br>Group07 Project</p>
                 </div>
             </div>
         </div>`;
@@ -129,7 +119,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
             },
             body: JSON.stringify({
                 to: studentData.personalEmail, // Send to personal email
-                subject: 'Welcome to Our School - Registration Successful!',
+                subject: 'Registration Successful! - TIME-KEEPER',
                 html: emailContent
             })
         });
