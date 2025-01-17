@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration System</title>
+    <link rel="stylesheet" href="student.css">
+</head>
+<body>
+    <div class="container">
+        <div class="tab-container" id="tab-container">
+            <button class="tab active" onclick="switchTab('login')">Login</button>
+            <button class="tab" onclick="switchTab('register')">Register New Account</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginContainer">
+            <h1>Student Login</h1>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+        </div>
+
+        <!-- Initial Registration Form -->
+        <div id="initialRegistrationContainer" class="hidden">
+            <h1>New Student Registration</h1>
+            <form id="initialRegistrationForm">
+                <div class="form-group">
+                    <label for="regstudentID">Student ID</label>
+                    <input type="text" id="regstudentID" required>
+                </div>
+                <div class="form-group">
+                    <label for="regName">Full Name</label>
+                    <input type="text" id="regName" required>
+                </div>
+                <div class="form-group">
+                    <label for="regCourse">Course</label>
+                    <input type="text" id="regCourse" required>
+                </div>
+                <div class="form-group">
+                    <label for="regSection">Section</label>
+                    <input type="text" id="regSection" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPersonalEmail">Personal Email</label>
+                    <input type="email" id="regPersonalEmail" required>
+                </div>
+                <button type="submit">Create Account</button>
+            </form>
+        </div>
+
+        <!-- Student Registration Form (After Login) -->
+        <div id="registrationContainer" class="hidden">
+            <h1>Student Registration Management</h1>
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label for="studentId">Student ID</label>
+                    <input type="text" id="studentId" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="course">Course</label>
+                    <input type="text" id="course" required>
+                </div>
+                <div class="form-group">
+                    <label for="section">Section</label>
+                    <input type="text" id="section" required>
+                </div>
+                <div class="form-group">
+                    <label for="personalEmail">Personal Email</label>
+                    <input type="email" id="personalEmail" required>
+                </div>
+                <button type="submit">Update Registration</button>
+                <button type="button" id="signOutBtn">Sign Out</button>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="index.js"></script>
+</body>
+</html>
