@@ -1,3 +1,5 @@
+// student.js
+
 // Import the functions you need from the Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
 import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
@@ -22,6 +24,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const auth = getAuth(app);
+
+let html5QrcodeScanner = null;
+const scannerModal = document.getElementById('scannerModal');
+const closeScannerModal = document.querySelector('.close-scanner-modal');
+const closeScannerBtn = document.getElementById('closeScannerBtn');
+const cameraPermissionDiv = document.getElementById('camera-permission');
+const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+const readerDiv = document.getElementById('reader');
 
 // Generate random student ID (5 characters)
 function generateStudentId() {
@@ -58,6 +68,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
         section: document.getElementById('regSection').value,
         personalEmail: document.getElementById('regPersonalEmail').value,
         institutionalEmail: generatedEmail,
+        upass:generatedPassword,
         registeredAt: new Date().toISOString()
     };
 
@@ -101,7 +112,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                     </div>
                 </div>
 
-                <p>Please keep these and also update your section every end of semester in <a style="color:#6b018b; text-decoration: none; font-weight: 800;" href="https://time-keeper-track-student.netlify.app/">TIME KEEPER</a> </p>
+                <p>Please keep these and also update your section every end of semester.</p>
 
                 <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
 
@@ -245,7 +256,7 @@ auth.onAuthStateChanged(async (user) => {
         modal.classList.remove('show');
         modal.classList.add('hidden');
     }
-    
+
     if (user) {
         // Get all students data
         try {
@@ -271,8 +282,8 @@ auth.onAuthStateChanged(async (user) => {
                     document.getElementById('personalEmail').value = studentData.personalEmail;
 
                     // Clear any existing QR code
-                    document.getElementById('qrcode').innerHTML = '';
-                    document.getElementById('qrStudentId').textContent = '';
+                    // document.getElementById('qrcode').innerHTML = '';
+                    // document.getElementById('qrStudentId').textContent = '';
 
                     document.getElementById('loginContainer').classList.add('hidden');
                     document.getElementById('tab-container').classList.add('hidden');
@@ -290,8 +301,171 @@ auth.onAuthStateChanged(async (user) => {
         document.getElementById('initialRegistrationContainer').classList.add('hidden');
         document.getElementById('registrationContainer').classList.add('hidden');
         // Clear QR code when logging out
-        document.getElementById('qrcode').innerHTML = '';
-        document.getElementById('qrStudentId').textContent = '';
+        // document.getElementById('qrcode').innerHTML = '';
+        // document.getElementById('qrStudentId').textContent = '';
+    }
+});
+    
+
+async function requestCameraPermission() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // Stop the stream immediately after getting permission
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+    } catch (error) {
+        console.error('Camera permission denied', error);
+        return false;
+    }
+}
+
+async function startScanner() {
+    cameraPermissionDiv.classList.add('hidden');
+    readerDiv.classList.remove('hidden');
+    
+    if (html5QrcodeScanner === null) {
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader",
+            { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 },
+                showTorchButtonIfSupported: true
+            }
+        );
+
+        html5QrcodeScanner.render(async (decodedText) => {
+            try {
+                const qrData = JSON.parse(decodedText);
+                
+                // Check if this is an attendance QR code
+                if (qrData.type !== 'attendance') {
+                    throw new Error('Invalid QR code type');
+                }
+
+                // Get current user's data
+                const studentId = document.getElementById('studentId').value;
+                const name = document.getElementById('name').value;
+                const course = document.getElementById('course').value;
+                const section = document.getElementById('section').value;
+
+                // Verify section matches
+                if (section !== qrData.section) {
+                    throw new Error('You are not enrolled in this subject');
+                }
+
+                // Check for existing attendance
+                const today = new Date().toISOString().split('T')[0];
+                const attendanceRef = ref(database, 'attendance');
+                const snapshot = await get(attendanceRef);
+                
+                if (snapshot.exists()) {
+                    const attendanceData = snapshot.val();
+                    const existingEntry = Object.values(attendanceData).find(entry => 
+                        entry.studentId === studentId &&
+                        entry.subject === qrData.subject &&
+                        entry.timeIn.startsWith(today)
+                    );
+
+                    if (existingEntry) {
+                        throw new Error('You have already recorded attendance for this subject today');
+                    }
+                }
+                
+                // Create attendance entry
+                const attendanceEntry = {
+                    studentId,
+                    name,
+                    course,
+                    section: qrData.section,
+                    timeIn: new Date().toISOString(),
+                    subject: qrData.subject
+                };
+
+                // Send attendance to server
+                const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(attendanceEntry)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to record attendance');
+                }
+
+                // Close scanner and modal after successful scan
+                closeScanner();
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Attendance recorded successfully!'
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message
+                });
+            }
+        });
+    }
+}
+
+// Initialize modal with permission request
+async function initializeScanner() {
+    cameraPermissionDiv.classList.remove('hidden');
+    readerDiv.classList.add('hidden');
+    
+    // Check if we already have permission
+    const hasPermission = await requestCameraPermission();
+    if (hasPermission) {
+        startScanner();
+    }
+}
+
+// Handle permission button click
+requestPermissionBtn.addEventListener('click', async () => {
+    const hasPermission = await requestCameraPermission();
+    if (hasPermission) {
+        startScanner();
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Camera Access Denied',
+            text: 'Please allow camera access in your browser settings to scan QR codes.'
+        });
+    }
+});
+
+// Update the scan button click handler
+document.getElementById('scanQRBtn').addEventListener('click', () => {
+    scannerModal.classList.remove('hidden');
+    scannerModal.classList.add('show');
+    initializeScanner();
+});
+
+// Close modal and cleanup
+function closeScanner() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+    }
+    scannerModal.classList.remove('show');
+    scannerModal.classList.add('hidden');
+}
+
+// Close modal handlers
+closeScannerModal.addEventListener('click', closeScanner);
+closeScannerBtn.addEventListener('click', closeScanner);
+
+// Close modal when clicking outside
+window.addEventListener('click', (e) => {
+    if (e.target === scannerModal) {
+        closeScanner();
     }
 });
 

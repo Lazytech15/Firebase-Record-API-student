@@ -6,6 +6,8 @@
     <title>Student Registration System</title>
     <link rel="stylesheet" href="student.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
     <div class="container">
@@ -82,8 +84,14 @@
                     <label for="personalEmail">Personal Email</label>
                     <input type="email" id="personalEmail" required>
                 </div>
+                <div class="form-group">
+                    <button type="button" id="scanQRBtn">Scan QR Code</button>
+                    <!-- <div id="reader" class="hidden"></div> -->
+                </div>
                 <button type="submit">Update Registration</button>
                 <button type="button" id="generateQRBtn">Generate QR Code</button>
+                <!-- <button type="button" id="scanQRBtn">Scan QR Code</button>
+                <div id="reader" class="hidden"></div> -->
                 <button type="button" id="signOutBtn">Sign Out</button>
             </form>
 
@@ -98,6 +106,24 @@
                         <div id="qrcode"></div>
                         <p id="qrStudentId"></p>
                         <button id="downloadQR" class="download-btn">Download QR Code</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- QR Scanner Modal -->
+            <div id="scannerModal" class="modal hidden">
+                <div class="modal-content scanner-modal">
+                    <div class="modal-header">
+                        <h2>Scan QR Code</h2>
+                        <span class="close-scanner-modal">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div id="camera-permission" class="camera-permission">
+                            <p>Camera access is required to scan QR codes.</p>
+                            <button id="requestPermissionBtn" class="permission-btn">Allow Camera Access</button>
+                        </div>
+                        <div id="reader" class="hidden"></div>
+                        <button id="closeScannerBtn" class="close-scanner-btn">Close Scanner</button>
                     </div>
                 </div>
             </div>

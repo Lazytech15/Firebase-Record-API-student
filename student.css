@@ -249,6 +249,98 @@ button:hover {
     }
 }
 
+/* QR Scanner Modal Styles */
+.scanner-modal {
+    width: 95%;
+    max-width: 640px;
+    background-color: #3c3f41;
+}
+
+.scanner-modal #reader {
+    width: 100% !important;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 20px 0;
+    background: #2d2d2d;
+}
+
+.scanner-modal #reader video {
+    width: 100% !important;
+    border-radius: 8px;
+}
+
+.scanner-modal #reader__scan_region {
+    background: #2d2d2d !important;
+    padding: 20px;
+}
+
+.camera-permission {
+    text-align: center;
+    padding: 20px;
+    background: #2d2d2d;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.camera-permission p {
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.permission-btn {
+    background: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    width: auto;
+    margin: 10px auto;
+}
+
+.permission-btn:hover {
+    background: #45a049;
+}
+
+.close-scanner-btn {
+    background: #dc3545;
+    color: white;
+    margin-top: 15px;
+}
+
+.close-scanner-btn:hover {
+    background: #bb2d3b;
+}
+
+/* Style fixes for the HTML5 QR scanner */
+#reader * {
+    color: #fff !important;
+}
+
+#reader select {
+    color: #000 !important;
+}
+
+#reader__dashboard_section_swaplink {
+    color: #ff008b !important;
+}
+
+#reader__camera_selection {
+    width: 100%;
+    padding: 8px;
+    margin: 10px 0;
+    background: #4a4a4a;
+    color: #fff !important;
+    border: 1px solid #666;
+    border-radius: 4px;
+}
+
+/* Make sure the scanner is visible when active */
+#reader.show {
+    display: block !important;
+}
+
 /* Responsive adjustments for modal */
 @media (max-width: 768px) {
     .modal-content {
