@@ -132,6 +132,63 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
     }
 });
 
+// Handle QR Code modal
+const modal = document.getElementById('qrModal');
+const closeModal = document.querySelector('.close-modal');
+const downloadBtn = document.getElementById('downloadQR');
+
+// Show modal and generate QR code
+document.getElementById('generateQRBtn').addEventListener('click', () => {
+    const studentId = document.getElementById('studentId').value;
+    const qrcodeContainer = document.getElementById('qrcode');
+    const qrStudentId = document.getElementById('qrStudentId');
+    
+    // Clear previous QR code
+    qrcodeContainer.innerHTML = '';
+    
+    // Generate new QR code
+    new QRCode(qrcodeContainer, {
+        text: studentId,
+        width: 128,
+        height: 128,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    // Update student ID text
+    qrStudentId.textContent = `Student ID: ${studentId}`;
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('show');
+});
+
+// Close modal when clicking the close button
+closeModal.addEventListener('click', () => {
+    modal.classList.remove('show');
+    modal.classList.add('hidden');
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', (e) => {
+    if (e.target === modal) {
+        modal.classList.remove('show');
+        modal.classList.add('hidden');
+    }
+});
+
+// Handle QR code download
+downloadBtn.addEventListener('click', () => {
+    const qrCanvas = document.querySelector('#qrcode canvas');
+    if (qrCanvas) {
+        const link = document.createElement('a');
+        link.download = 'student-qr-code.png';
+        link.href = qrCanvas.toDataURL();
+        link.click();
+    }
+});
+
 // Handle registration form (after login)
 document.getElementById('registrationForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -184,6 +241,11 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
 // Auth state observer
 auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+        modal.classList.remove('show');
+        modal.classList.add('hidden');
+    }
+    
     if (user) {
         // Get all students data
         try {
@@ -208,6 +270,10 @@ auth.onAuthStateChanged(async (user) => {
                     document.getElementById('section').value = studentData.section;
                     document.getElementById('personalEmail').value = studentData.personalEmail;
 
+                    // Clear any existing QR code
+                    document.getElementById('qrcode').innerHTML = '';
+                    document.getElementById('qrStudentId').textContent = '';
+
                     document.getElementById('loginContainer').classList.add('hidden');
                     document.getElementById('tab-container').classList.add('hidden');
                     document.getElementById('initialRegistrationContainer').classList.add('hidden');
@@ -223,10 +289,11 @@ auth.onAuthStateChanged(async (user) => {
         document.getElementById('loginContainer').classList.remove('hidden');
         document.getElementById('initialRegistrationContainer').classList.add('hidden');
         document.getElementById('registrationContainer').classList.add('hidden');
+        // Clear QR code when logging out
+        document.getElementById('qrcode').innerHTML = '';
+        document.getElementById('qrStudentId').textContent = '';
     }
 });
-
-
 
 // Make switchTab function available globally
 window.switchTab = function(tab) {
