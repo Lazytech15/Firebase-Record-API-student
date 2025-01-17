@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Student Registration System</title>
     <link rel="stylesheet" href="student.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -82,11 +83,26 @@
                     <input type="email" id="personalEmail" required>
                 </div>
                 <button type="submit">Update Registration</button>
+                <button type="button" id="generateQRBtn">Generate QR Code</button>
                 <button type="button" id="signOutBtn">Sign Out</button>
             </form>
+
+            <!-- QR Code Modal -->
+            <div id="qrModal" class="modal hidden">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>Your QR Code</h2>
+                        <span class="close-modal">&times;</span>
+                    </div>
+                    <div class="modal-body">
+                        <div id="qrcode"></div>
+                        <p id="qrStudentId"></p>
+                        <button id="downloadQR" class="download-btn">Download QR Code</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
     <script type="module" src="index.js"></script>
 </body>
 </html>
