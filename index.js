@@ -101,7 +101,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                     </div>
                 </div>
 
-                <p>Please keep these and also update your section every end of semester.</p>
+                <p>Please keep these and also update your section every end of semester in <a style="color:#6b018b; text-decoration: none; font-weight: 800;" href="https://time-keeper-track-student.netlify.app/">TIME KEEPER</a> </p>
 
                 <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
 
