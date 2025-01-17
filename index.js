@@ -68,13 +68,74 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
         // Save the student data to the Firebase Realtime Database
         await set(ref(database, 'students/' + studentData.studentId), studentData);
         
-        // Log the generated credentials
-        console.log('Generated Email:', generatedEmail);
-        console.log('Generated Password:', generatedPassword);
+        // Send welcome email
+        const emailContent = `
+        <div style="font-family: Courier, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background-color: #38005e; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+                <h1 style="font-family: Verdana, sans-serif;">Welcome to Our School!</h1>
+            </div>
+            
+            <div style="padding: 20px; background-color: #ffffff; border: 1px solid #dddddd;">
+                <div style="font-family: Trebuchet MS, sans-serif; font-size: 24px; margin-bottom: 20px; color: #6b018b;">
+                    Dear ${studentData.name},
+                </div>
+                
+                <p>Congratulations on successfully registering as a student! We're excited to have you join our academic community.</p>
+                
+                <div style="background-color: #f3f4f6; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    <h2>Your Registration Details</h2>
+                    <div style="margin: 10px 0;">
+                        <strong>Student ID:</strong> <span style="font-family: Helvetica, sans-serif;">${studentData.studentId}</span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>Email:</strong> <span style="font-family: Helvetica, sans-serif; color:#6b018b;">${generatedEmail}</span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>Password:</strong> <span style="font-family: Helvetica, sans-serif; color:#6b018b;">${generatedPassword}</span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>Course:</strong> <span style="font-family: Helvetica, sans-serif;">${studentData.course}</span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>Section:</strong> <span style="font-family: Helvetica, sans-serif;">${studentData.section}</span>
+                    </div>
+                </div>
+
+                <p>Please keep these credentials safe and change your password upon your first login.</p>
+                
+                <p>To get started:</p>
+                <ol>
+                    <li>Visit our student portal: <a style="color:#6b018b; text-decoration: none; font-weight: 800;" href="https://next-gen-permss.netlify.app/">Next Generation Permission</a></li>
+                    <li>Please use Google Chrome Browser.</li>
+                    <li>Log in with your email and password.</li>
+                    <li>You can use Google Sign-In (Note: Don't fill up the username and password—just hit the login).</li>
+                    <li>You can use your registered NFC Card by tapping it on your supported device (Note: Not applicable on iOS devices).</li>
+                    <li>Update your password.</li>
+                </ol>
+
+                <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+
+                <div style="text-align: center; margin-top: 20px; color: #666666;">
+                    <p>Best regards,<br>Team Loigasm</p>
+                </div>
+            </div>
+        </div>`;
+
+        // Send the welcome email
+        await fetch('/.netlify/functions/sendEmail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                to: studentData.personalEmail, // Send to personal email
+                subject: 'Welcome to Our School - Registration Successful!',
+                html: emailContent
+            })
+        });
         
-        alert(`Registration successful!\n\nYour institutional email: ${generatedEmail}\nYour password: ${generatedPassword}\n\nPlease save these credentials!`);
+        alert(`Registration successful!\n\nYour institutional email: ${generatedEmail}\nYour password: ${generatedPassword}\n\nPlease check your personal email for registration details!`);
         e.target.reset();
-        // switchTab('login');
     } catch (error) {
         console.error('Error:', error);
         alert('Registration failed: ' + error.message);
