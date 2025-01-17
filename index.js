@@ -26,6 +26,7 @@ const database = getDatabase(app);
 const auth = getAuth(app);
 
 let html5QrcodeScanner = null;
+let scannerLocked = false;
 const scannerModal = document.getElementById('scannerModal');
 const closeScannerModal = document.querySelector('.close-scanner-modal');
 const closeScannerBtn = document.getElementById('closeScannerBtn');
@@ -112,7 +113,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                     </div>
                 </div>
 
-                <p>Please keep these and also update your section every end of semester just click this link <a style="color:#6b018b; text-decoration: none; font-weight: 800;" href="https://time-keeper-track-student.netlify.app">TIME KEEPER</a>.</p>
+                <p>Please keep these and also update your section every end of semester.</p>
 
                 <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
 
@@ -334,6 +335,14 @@ async function startScanner() {
         );
 
         html5QrcodeScanner.render(async (decodedText) => {
+            // If scanner is locked, return immediately
+            if (scannerLocked) {
+                return;
+            }
+            
+            // Lock the scanner
+            scannerLocked = true;
+            
             try {
                 const qrData = JSON.parse(decodedText);
                 
@@ -381,6 +390,11 @@ async function startScanner() {
                     subject: qrData.subject
                 };
 
+                // Pause scanner before making the request
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.pause();
+                }
+
                 // Send attendance to server
                 const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
                     method: 'POST',
@@ -405,11 +419,25 @@ async function startScanner() {
 
             } catch (error) {
                 console.error('Error:', error);
-                Swal.fire({
+                
+                // Pause scanner before showing error
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.pause();
+                }
+                
+                await Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: error.message
                 });
+                
+                // Resume scanner after error alert is closed
+                if (html5QrcodeScanner) {
+                    html5QrcodeScanner.resume();
+                }
+            } finally {
+                // Unlock the scanner after processing is complete
+                scannerLocked = false;
             }
         });
     }
