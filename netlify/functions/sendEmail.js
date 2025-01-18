@@ -42,7 +42,7 @@ export async function handler(event, context) {
         await transporter.verify();
 
         const mailOptions = {
-            from: '"Team Loigasm" <nfccapstoneproject@gmail.com>',
+            from: '"Group 7 Project" <projectipt00@gmail.com>',
             to,
             subject,
             html // Use HTML content directly
