@@ -27,6 +27,7 @@ const auth = getAuth(app);
 
 let html5QrcodeScanner = null;
 let scannerLocked = false;
+let isScanning = false;
 const scannerModal = document.getElementById('scannerModal');
 const closeScannerModal = document.querySelector('.close-scanner-modal');
 const closeScannerBtn = document.getElementById('closeScannerBtn');
@@ -62,14 +63,27 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
     const generatedEmail = `${studentId}@icct.com`;
     const generatedPassword = generatePassword();
 
+    // Combine the name fields
+    const firstName = document.getElementById('regFirstName').value.trim();
+    const middleName = document.getElementById('regMiddleName').value.trim();
+    const lastName = document.getElementById('regLastName').value.trim();
+    
+    // Create full name with optional middle name
+    const fullName = middleName 
+        ? `${firstName} ${middleName} ${lastName}`
+        : `${firstName} ${lastName}`;
+
     const studentData = {
         studentId: document.getElementById('regstudentID').value,
-        name: document.getElementById('regName').value,
+        firstName: firstName,
+        middleName: middleName,
+        lastName: lastName,
+        fullName: fullName,
         course: document.getElementById('regCourse').value,
         section: document.getElementById('regSection').value,
         personalEmail: document.getElementById('regPersonalEmail').value,
         institutionalEmail: generatedEmail,
-        upass:generatedPassword,
+        upass: generatedPassword,
         registeredAt: new Date().toISOString()
     };
 
@@ -80,7 +94,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
         // Save the student data to the Firebase Realtime Database
         await set(ref(database, 'students/' + studentData.studentId), studentData);
         
-        // Send welcome email
+        // Update the email template to use the new name fields
         const emailContent = `
         <div style="font-family: Courier, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background-color: #38005e; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -89,7 +103,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
             
             <div style="padding: 20px; background-color: #ffffff; border: 1px solid #dddddd;">
                 <div style="font-family: Trebuchet MS, sans-serif; font-size: 24px; margin-bottom: 20px; color: #6b018b;">
-                    Dear ${studentData.name},
+                    Dear ${studentData.firstName},
                 </div>
                 
                 <p>Congratulations on successfully registering as a student! We're excited to have you join our easy access database.</p>
@@ -98,6 +112,9 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                     <h2>Your Registration Details</h2>
                     <div style="margin: 10px 0;">
                         <strong>Student ID:</strong> <span style="font-family: Helvetica, sans-serif;">${studentData.studentId}</span>
+                    </div>
+                    <div style="margin: 10px 0;">
+                        <strong>Full Name:</strong> <span style="font-family: Helvetica, sans-serif;">${studentData.fullName}</span>
                     </div>
                     <div style="margin: 10px 0;">
                         <strong>Email:</strong> <span style="font-family: Helvetica, sans-serif; color:#6b018b;">${generatedEmail}</span>
@@ -130,13 +147,19 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                to: studentData.personalEmail, // Send to personal email
+                to: studentData.personalEmail,
                 subject: 'Registration Successful! - TIME-KEEPER',
                 html: emailContent
             })
         });
         
-        alert(`Registration successful!\n\nYour institutional email: ${generatedEmail}\nYour password: ${generatedPassword}\n\nPlease check your personal email for registration details!`);
+        Swal.fire({
+            title: 'Registration successful!',
+            html: `Your institutional email: ${generatedEmail}<br>Your password: ${generatedPassword}<br><br>Please check your personal email for registration details!`,
+            icon: 'success',
+            confirmButtonText: 'OK'
+          });
+          
         e.target.reset();
     } catch (error) {
         console.error('Error:', error);
@@ -342,6 +365,7 @@ async function startScanner() {
             
             // Lock the scanner
             scannerLocked = true;
+            isScanning = true;
             
             try {
                 const qrData = JSON.parse(decodedText);
@@ -390,9 +414,14 @@ async function startScanner() {
                     subject: qrData.subject
                 };
 
-                // Pause scanner before making the request
-                if (html5QrcodeScanner) {
-                    html5QrcodeScanner.pause();
+                // Safely pause scanner
+                if (html5QrcodeScanner && isScanning) {
+                    try {
+                        await html5QrcodeScanner.pause(true);
+                        isScanning = false;
+                    } catch (error) {
+                        console.warn('Failed to pause scanner:', error);
+                    }
                 }
 
                 // Send attendance to server
@@ -420,9 +449,14 @@ async function startScanner() {
             } catch (error) {
                 console.error('Error:', error);
                 
-                // Pause scanner before showing error
-                if (html5QrcodeScanner) {
-                    html5QrcodeScanner.pause();
+                // Safely pause scanner
+                if (html5QrcodeScanner && isScanning) {
+                    try {
+                        await html5QrcodeScanner.pause(true);
+                        isScanning = false;
+                    } catch (pauseError) {
+                        console.warn('Failed to pause scanner:', pauseError);
+                    }
                 }
                 
                 await Swal.fire({
@@ -431,9 +465,14 @@ async function startScanner() {
                     text: error.message
                 });
                 
-                // Resume scanner after error alert is closed
-                if (html5QrcodeScanner) {
-                    html5QrcodeScanner.resume();
+                // Safely resume scanner
+                if (html5QrcodeScanner && !isScanning) {
+                    try {
+                        await html5QrcodeScanner.resume();
+                        isScanning = true;
+                    } catch (resumeError) {
+                        console.warn('Failed to resume scanner:', resumeError);
+                    }
                 }
             } finally {
                 // Unlock the scanner after processing is complete
@@ -477,10 +516,18 @@ document.getElementById('scanQRBtn').addEventListener('click', () => {
 });
 
 // Close modal and cleanup
-function closeScanner() {
+async function closeScanner() {
     if (html5QrcodeScanner) {
-        html5QrcodeScanner.clear();
-        html5QrcodeScanner = null;
+        try {
+            if (isScanning) {
+                await html5QrcodeScanner.pause(true);
+                isScanning = false;
+            }
+            await html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+        } catch (error) {
+            console.warn('Error while closing scanner:', error);
+        }
     }
     scannerModal.classList.remove('show');
     scannerModal.classList.add('hidden');

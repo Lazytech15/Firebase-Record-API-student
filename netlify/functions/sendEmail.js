@@ -6,7 +6,7 @@ export async function handler(event, context) {
         return {
             statusCode: 200,
             headers: {
-                'Access-Control-Allow-Origin': 'https://time-keeper-track-student.netlify.app',
+                'Access-Control-Allow-Origin': 'https://next-gen-permss.netlify.app',
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
@@ -42,7 +42,7 @@ export async function handler(event, context) {
         await transporter.verify();
 
         const mailOptions = {
-            from: '"Team Group 7" <projectipt00@gmail.com>',
+            from: '"Team Loigasm" <nfccapstoneproject@gmail.com>',
             to,
             subject,
             html // Use HTML content directly
@@ -53,7 +53,7 @@ export async function handler(event, context) {
         return {
             statusCode: 200,
             headers: {
-                'Access-Control-Allow-Origin': 'https://time-keeper-track-student.netlify.app',
+                'Access-Control-Allow-Origin': 'https://next-gen-permss.netlify.app',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -67,7 +67,7 @@ export async function handler(event, context) {
         return {
             statusCode: 500,
             headers: {
-                'Access-Control-Allow-Origin': 'https://time-keeper-track-student.netlify.app',
+                'Access-Control-Allow-Origin': 'https://next-gen-permss.netlify.app',
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
