@@ -78,7 +78,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
         firstName: firstName,
         middleName: middleName,
         lastName: lastName,
-        fullName: fullName,
+        name: fullName,
         course: document.getElementById('regCourse').value,
         section: document.getElementById('regSection').value,
         personalEmail: document.getElementById('regPersonalEmail').value,
@@ -130,7 +130,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                     </div>
                 </div>
 
-                <p>Please keep these and also update your section every end of semester by clicking this link to login <a style="color:#6b018b; text-decoration: none; font-weight: 800;" href="https://time-keeper-track-student.netlify.app">TIME KEEPER</a>.</p>
+                <p>Please keep this and also update your section every end of semester by clicking this link to login <a style="color:#6b018b; text-decoration: none; font-weight: 800;" href="https://time-keeper-track-student.netlify.app">TIME KEEPER</a>.</p>
 
                 <p>If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
 
