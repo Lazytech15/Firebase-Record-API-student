@@ -356,13 +356,13 @@ button:hover {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
-    .container{
+    /* .container{
         margin: auto;
         position: absolute;
         left: 50%;
         top: 50%;
         transform: translate(-50%, -50%);
-    }
+    } */
     body {
         padding: 20px 10px;
     }
