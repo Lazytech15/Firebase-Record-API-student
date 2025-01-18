@@ -6,7 +6,7 @@ export async function handler(event, context) {
         return {
             statusCode: 200,
             headers: {
-                'Access-Control-Allow-Origin': 'https://next-gen-permss.netlify.app',
+                'Access-Control-Allow-Origin': 'https://time-keeper-track-student.netlify.app',
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Methods': 'POST, OPTIONS'
             },
