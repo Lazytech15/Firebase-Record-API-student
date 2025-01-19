@@ -498,64 +498,6 @@ async function startScanner() {
     }
 }
 
-                // Send attendance to server
-                const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(attendanceEntry)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to record attendance');
-                }
-
-                // Close scanner and modal after successful scan
-                closeScanner();
-
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Attendance recorded successfully!'
-                });
-
-            } catch (error) {
-                console.error('Error:', error);
-                
-                // Safely pause scanner
-                if (html5QrcodeScanner && isScanning) {
-                    try {
-                        await html5QrcodeScanner.pause(true);
-                        isScanning = false;
-                    } catch (pauseError) {
-                        console.warn('Failed to pause scanner:', pauseError);
-                    }
-                }
-                
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message
-                });
-                
-                // Safely resume scanner
-                if (html5QrcodeScanner && !isScanning) {
-                    try {
-                        await html5QrcodeScanner.resume();
-                        isScanning = true;
-                    } catch (resumeError) {
-                        console.warn('Failed to resume scanner:', resumeError);
-                    }
-                }
-            } finally {
-                // Unlock the scanner after processing is complete
-                scannerLocked = false;
-            }
-        });
-    }
-}
-
 // Initialize modal with permission request
 async function initializeScanner() {
     cameraPermissionDiv.classList.remove('hidden');
