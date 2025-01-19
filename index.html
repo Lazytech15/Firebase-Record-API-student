@@ -146,6 +146,21 @@
             </div>
         </div>
     </div>
+
+    <div class="login-description hidden" id="logindescription">
+        <p>Student Data Management System: <br> <br> <span>Easily store student data by registering with basic details like ID, name, email, and section. Receive an email with your username and password. Once logged in, you can update your data, generate QR codes for teachers to scan, and manage your information effortlessly.</span></p>
+    </div>
+
+    <footer id="footer"></footer>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const footer = document.getElementById("footer");
+        const currentYear = new Date().getFullYear();
+        footer.innerHTML = `© ${currentYear} Group 7. All rights reserved.`;
+    });
+</script>
+
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

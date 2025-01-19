@@ -655,9 +655,11 @@ window.switchTab = function(tab) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     if (tab === 'login') {
         document.getElementById('loginContainer').classList.remove('hidden');
+        // document.getElementById('logindescription').classList.remove('hidden');
         document.getElementById('initialRegistrationContainer').classList.add('hidden');
         document.querySelector('.tab:first-child').classList.add('active');
     } else {
+        // document.getElementById('logindescription').classList.add('hidden');
         document.getElementById('loginContainer').classList.add('hidden');
         document.getElementById('initialRegistrationContainer').classList.remove('hidden');
         document.querySelector('.tab:last-child').classList.add('active');
