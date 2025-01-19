@@ -512,6 +512,8 @@ button:hover {
     background: #615f63;
 }
 
+
+
 /* Responsive adjustments for modal */
 @media (max-width: 768px) {
     .modal-content {
