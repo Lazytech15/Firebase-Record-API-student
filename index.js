@@ -103,7 +103,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
             
             <div style="padding: 20px; background-color: #ffffff; border: 1px solid #dddddd;">
                 <div style="font-family: Trebuchet MS, sans-serif; font-size: 24px; margin-bottom: 20px; color: #6b018b;">
-                    Dear ${studentData.firstName},
+                    Dear ${studentData.name},
                 </div>
                 
                 <p>Congratulations on successfully registering as a student! We're excited to have you join our easy access database.</p>
@@ -114,7 +114,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
                         <strong>Student ID:</strong> <span style="font-family: Helvetica, sans-serif;">${studentData.studentId}</span>
                     </div>
                     <div style="margin: 10px 0;">
-                        <strong>Full Name:</strong> <span style="font-family: Helvetica, sans-serif;">${studentData.fullName}</span>
+                        <strong>Full Name:</strong> <span style="font-family: Helvetica, sans-serif;">${studentData.name}</span>
                     </div>
                     <div style="margin: 10px 0;">
                         <strong>Email:</strong> <span style="font-family: Helvetica, sans-serif; color:#6b018b;">${generatedEmail}</span>
