@@ -1,2 +1,12 @@
 [build]
   functions = "netlify/functions"
+
+[[plugins]]
+  package = "netlify-plugin-js-obfuscator"
+
+  [plugins.inputs]
+  compact = true
+  controlFlowFlattening = true
+  deadCodeInjection = true
+  debugProtection = true
+  disableConsoleOutput = true
