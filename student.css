@@ -393,6 +393,85 @@ button:hover {
     gap: 1rem;
 }
 
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 3px solid #ffffff;
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Delete button styles */
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    margin-top: 10px;
+}
+
+.delete-btn:hover {
+    background-color: #bb2d3b;
+}
+
+/* Disabled button styles */
+button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Update the form-field styles to apply to login form as well */
+#loginContainer .form-field {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+#loginContainer .form-field input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #4a4a4a;
+    background: transparent;
+    border-radius: 5px;
+    outline: none;
+    color: #fff;
+    font-size: 1rem;
+    transition: 0.3s ease;
+}
+
+#loginContainer .form-field label {
+    position: absolute;
+    left: 1rem;
+    top: 0.8rem;
+    padding: 0 0.5rem;
+    color: #9d9a9a;
+    cursor: text;
+    transition: 0.2s ease;
+    background: #3c3f41;
+    text-wrap: nowrap;
+    font-size: 0.6rem;
+    border-radius: 0.5rem;
+}
+
+#loginContainer .form-field input:focus {
+    border-color: #ff008b;
+}
+
+#loginContainer .form-field input:focus + label,
+#loginContainer .form-field input:not(:placeholder-shown) + label {
+    top: -0.5rem;
+    font-size: 0.8rem;
+    color: #ff008b;
+}
+
+#loginContainer .form-field input::placeholder {
+    color: transparent;
+}
+
 @media (max-width: 768px) {
     .name-fields {
         grid-template-columns: 1fr;

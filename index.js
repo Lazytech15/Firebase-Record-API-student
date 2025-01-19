@@ -28,6 +28,7 @@ const auth = getAuth(app);
 let html5QrcodeScanner = null;
 let scannerLocked = false;
 let isScanning = false;
+let isLoading = false;
 const scannerModal = document.getElementById('scannerModal');
 const closeScannerModal = document.querySelector('.close-scanner-modal');
 const closeScannerBtn = document.getElementById('closeScannerBtn');
@@ -55,9 +56,29 @@ function generatePassword() {
     return result;
 }
 
+function toggleLoading(show) {
+    isLoading = show;
+    const buttons = document.querySelectorAll('button[type="submit"]');
+    buttons.forEach(button => {
+        button.disabled = show;
+        button.innerHTML = show ? '<div class="spinner"></div>' : button.getAttribute('data-original-text');
+    });
+}
+
+// Save original button text when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    const buttons = document.querySelectorAll('button[type="submit"]');
+    buttons.forEach(button => {
+        button.setAttribute('data-original-text', button.innerHTML);
+    });
+});
+
 // Handle initial registration
 document.getElementById('initialRegistrationForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (isLoading) return;
+
+    toggleLoading(true);
     
     const studentId = generateStudentId();
     const generatedEmail = `${studentId}@icct.com`;
@@ -163,7 +184,13 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
         e.target.reset();
     } catch (error) {
         console.error('Error:', error);
-        alert('Registration failed: ' + error.message);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Registration Failed',
+            text: error.message
+        });
+    } finally {
+        toggleLoading(false);
     }
 });
 
@@ -227,6 +254,9 @@ downloadBtn.addEventListener('click', () => {
 // Handle registration form (after login)
 document.getElementById('registrationForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (isLoading) return;
+
+    toggleLoading(true);
 
     const studentData = {
         studentId: document.getElementById('studentId').value,
@@ -242,7 +272,13 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
         alert('Registration updated successfully!');
     } catch (error) {
         console.error('Error:', error);
-        alert('Update failed: ' + error.message);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: error.message
+        });
+    } finally {
+        toggleLoading(false);
     }
 });
 
@@ -262,15 +298,23 @@ document.getElementById('signOutBtn').addEventListener('click', async () => {
 // Handle login
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (isLoading) return;
+
+    toggleLoading(true);
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
 
     try {
         await signInWithEmailAndPassword(auth, email, password);
-        // The auth state observer will handle the UI update
     } catch (error) {
         console.error('Login error:', error);
-        alert('Login failed: ' + error.message);
+        await Swal.fire({
+            icon: 'error',
+            title: 'Data Not Found!',
+            text: 'Please check youre username and password'
+        });
+    } finally {
+        toggleLoading(false);
     }
 });
 
@@ -557,6 +601,52 @@ closeScannerBtn.addEventListener('click', closeScanner);
 window.addEventListener('click', (e) => {
     if (e.target === scannerModal) {
         closeScanner();
+    }
+});
+
+// Add delete account handler
+document.getElementById('deleteAccountBtn').addEventListener('click', async () => {
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "This action cannot be undone!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete my account'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            toggleLoading(true);
+            const user = auth.currentUser;
+            const studentId = document.getElementById('studentId').value;
+
+            // Delete from database
+            await set(ref(database, 'students/' + studentId), null);
+            
+            // Delete user account
+            await user.delete();
+            
+            await Swal.fire(
+                'Deleted!',
+                'Your account has been deleted.',
+                'success'
+            );
+            
+            // Redirect to login
+            document.getElementById('loginContainer').classList.remove('hidden');
+            document.getElementById('registrationContainer').classList.add('hidden');
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            Swal.fire(
+                'Error!',
+                'Failed to delete account: ' + error.message,
+                'error'
+            );
+        } finally {
+            toggleLoading(false);
+        }
     }
 });
 
