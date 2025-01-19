@@ -6,7 +6,7 @@
 
   [plugins.inputs]
   compact = true
-  controlFlowFlattening = true
-  deadCodeInjection = true
-  debugProtection = true
-  disableConsoleOutput = true
+  numbersToExpressions = true
+  simplify = true
+  shuffleStringArray = true
+  splitStrings = true
