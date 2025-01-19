@@ -381,9 +381,19 @@ async function startScanner() {
                 const course = document.getElementById('course').value;
                 const section = document.getElementById('section').value;
 
-                // Verify section matches
-                if (section !== qrData.section) {
-                    throw new Error('You are not enrolled in this subject');
+                // Split both the student's sections and QR code sections
+                const studentSections = section.split(',').map(s => s.trim());
+                const qrSections = Array.isArray(qrData.section) 
+                    ? qrData.section 
+                    : [qrData.section].map(s => s.trim());
+
+                // Check if there's any matching section
+                const matchingSection = qrSections.find(qrSection => 
+                    studentSections.includes(qrSection)
+                );
+
+                if (!matchingSection) {
+                    throw new Error('You are not enrolled in this section');
                 }
 
                 // Check for existing attendance
@@ -404,12 +414,12 @@ async function startScanner() {
                     }
                 }
                 
-                // Create attendance entry
+                // Create attendance entry with matching section
                 const attendanceEntry = {
                     studentId,
                     name,
                     course,
-                    section: qrData.section,
+                    section: matchingSection, // Use the matching section
                     timeIn: new Date().toISOString(),
                     subject: qrData.subject
                 };
@@ -423,6 +433,70 @@ async function startScanner() {
                         console.warn('Failed to pause scanner:', error);
                     }
                 }
+
+                // Send attendance to server
+                const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(attendanceEntry)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to record attendance');
+                }
+
+                // Close scanner and modal after successful scan
+                closeScanner();
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Attendance recorded successfully!',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // Safely pause scanner
+                if (html5QrcodeScanner && isScanning) {
+                    try {
+                        await html5QrcodeScanner.pause(true);
+                        isScanning = false;
+                    } catch (pauseError) {
+                        console.warn('Failed to pause scanner:', pauseError);
+                    }
+                }
+                
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                // Safely resume scanner
+                if (html5QrcodeScanner && !isScanning) {
+                    try {
+                        await html5QrcodeScanner.resume();
+                        isScanning = true;
+                    } catch (resumeError) {
+                        console.warn('Failed to resume scanner:', resumeError);
+                    }
+                }
+            } finally {
+                // Unlock the scanner after processing is complete
+                setTimeout(() => {
+                    scannerLocked = false;
+                }, 2000); // 2 second delay before allowing new scans
+            }
+        });
+    }
+}
 
                 // Send attendance to server
                 const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
