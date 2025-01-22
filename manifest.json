@@ -1,7 +1,7 @@
 {
-    "name": "Student Registration System",
+    "name": "TIME-KEEPER: Store and Collect Data",
     "short_name": "TIME-KEEPER",
-    "description": "ICCT Student Registration and Attendance System",
+    "description": "Its an all in one data collection for easy access",
     "start_url": "/index.html",
     "display": "standalone",
     "background_color": "#303030",
