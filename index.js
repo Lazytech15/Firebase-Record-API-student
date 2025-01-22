@@ -2,7 +2,7 @@
 
 // Import the functions you need from the Firebase SDKs
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+import { getDatabase, ref, set, get, update } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
 import { 
     getAuth, 
     createUserWithEmailAndPassword, 
@@ -268,7 +268,7 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
     };
 
     try {
-        await set(ref(database, 'students/' + studentData.studentId), studentData);
+        await update(ref(database, 'students/' + studentData.studentId), studentData);
         alert('Registration updated successfully!');
     } catch (error) {
         console.error('Error:', error);
