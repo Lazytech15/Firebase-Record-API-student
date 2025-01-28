@@ -102,7 +102,7 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
             name: fullName,
             course: document.getElementById('regCourse').value,
             section: document.getElementById('regSection').value,
-            trisemester: document.getElementById('trisemester').value,
+            trisemester: document.getElementById('trisemesterreg').value, // Add trisemester
             personalEmail: document.getElementById('regPersonalEmail').value,
             institutionalEmail: generatedEmail,
             upass: generatedPassword,
