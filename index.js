@@ -94,19 +94,20 @@ document.getElementById('initialRegistrationForm').addEventListener('submit', as
         ? `${firstName} ${middleName} ${lastName}`
         : `${firstName} ${lastName}`;
 
-    const studentData = {
-        studentId: document.getElementById('regstudentID').value,
-        firstName: firstName,
-        middleName: middleName,
-        lastName: lastName,
-        name: fullName,
-        course: document.getElementById('regCourse').value,
-        section: document.getElementById('regSection').value,
-        personalEmail: document.getElementById('regPersonalEmail').value,
-        institutionalEmail: generatedEmail,
-        upass: generatedPassword,
-        registeredAt: new Date().toISOString()
-    };
+        const studentData = {
+            studentId: document.getElementById('regstudentID').value,
+            firstName: firstName,
+            middleName: middleName,
+            lastName: lastName,
+            name: fullName,
+            course: document.getElementById('regCourse').value,
+            section: document.getElementById('regSection').value,
+            trisemester: document.getElementById('regTrisemester').value, // Add trisemester
+            personalEmail: document.getElementById('regPersonalEmail').value,
+            institutionalEmail: generatedEmail,
+            upass: generatedPassword,
+            registeredAt: new Date().toISOString()
+        };
 
     try {
         // Create Firebase Auth user
@@ -263,6 +264,7 @@ document.getElementById('registrationForm').addEventListener('submit', async (e)
         name: document.getElementById('name').value,
         course: document.getElementById('course').value,
         section: document.getElementById('section').value,
+        trisemester: document.getElementById('trisemester').value, // Add trisemester
         personalEmail: document.getElementById('personalEmail').value,
         updatedAt: new Date().toISOString()
     };
@@ -347,6 +349,7 @@ auth.onAuthStateChanged(async (user) => {
                     document.getElementById('name').value = studentData.name;
                     document.getElementById('course').value = studentData.course;
                     document.getElementById('section').value = studentData.section;
+                    document.getElementById('trisemester').value = studentData.trisemester || '';
                     document.getElementById('personalEmail').value = studentData.personalEmail;
 
                     // Clear any existing QR code
