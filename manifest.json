@@ -4,8 +4,8 @@
     "description": "Its an all in one data collection for easy access",
     "start_url": "/index.html",
     "display": "standalone",
-    "background_color": "#303030",
-    "theme_color": "#303030",
+    "background_color": "#f5f9ff",
+    "theme_color": "#f5f9ff",
     "icons": [
         {
             "src": "icons/icon-72x72.png",
