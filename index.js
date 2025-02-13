@@ -395,22 +395,60 @@ async function startScanner() {
     readerDiv.classList.remove('hidden');
     
     if (html5QrcodeScanner === null) {
-        html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader",
-            { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 },
-                showTorchButtonIfSupported: true
-            }
-        );
+       // Add zoom controls container
+       const zoomControls = document.createElement('div');
+       zoomControls.className = 'zoom-controls';
+       zoomControls.style.cssText = `
+           position: absolute;
+           bottom: 10px;
+           left: 50%;
+           transform: translateX(-50%);
+           z-index: 1000;
+           background: rgba(0, 0, 0, 0.5);
+           padding: 5px;
+           border-radius: 20px;
+           display: flex;
+           gap: 10px;
+           align-items: center;
+       `;
+       
+       // Create zoom buttons
+       const zoomInBtn = document.createElement('button');
+       zoomInBtn.innerHTML = '🔍+';
+       zoomInBtn.className = 'zoom-btn';
+       zoomInBtn.style.cssText = `
+           background: white;
+           border: none;
+           border-radius: 50%;
+           width: 30px;
+           height: 30px;
+           cursor: pointer;
+           font-size: 14px;
+       `;
+
+       const zoomOutBtn = document.createElement('button');
+       zoomOutBtn.innerHTML = '🔍-';
+       zoomOutBtn.className = 'zoom-btn';
+       zoomOutBtn.style.cssText = zoomInBtn.style.cssText;
+
+       zoomControls.appendChild(zoomOutBtn);
+       zoomControls.appendChild(zoomInBtn);
+
+       // Initialize scanner with a larger QR box
+       html5QrcodeScanner = new Html5QrcodeScanner(
+           "reader",
+           { 
+               fps: 10, 
+               qrbox: { width: 350, height: 350 }, // Increased from 250 to 350
+               showTorchButtonIfSupported: true,
+               aspectRatio: 1.0,
+               zoom: 1.0
+           }
+       );
 
         html5QrcodeScanner.render(async (decodedText) => {
             // If scanner is locked, return immediately
-            if (scannerLocked) {
-                return;
-            }
-            
-            // Lock the scanner
+            if (scannerLocked) return;
             scannerLocked = true;
             isScanning = true;
             
@@ -507,39 +545,42 @@ async function startScanner() {
 
             } catch (error) {
                 console.error('Error:', error);
-                
-                // Safely pause scanner
-                if (html5QrcodeScanner && isScanning) {
-                    try {
-                        await html5QrcodeScanner.pause(true);
-                        isScanning = false;
-                    } catch (pauseError) {
-                        console.warn('Failed to pause scanner:', pauseError);
-                    }
-                }
-                
-                await Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message,
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-                
-                // Safely resume scanner
-                if (html5QrcodeScanner && !isScanning) {
-                    try {
-                        await html5QrcodeScanner.resume();
-                        isScanning = true;
-                    } catch (resumeError) {
-                        console.warn('Failed to resume scanner:', resumeError);
-                    }
-                }
             } finally {
-                // Unlock the scanner after processing is complete
                 setTimeout(() => {
                     scannerLocked = false;
-                }, 2000); // 2 second delay before allowing new scans
+                }, 2000);
+            }
+        }, (error) => {
+            console.warn(`Code scan error = ${error}`);
+        }).then(() => {
+            // Add zoom controls after scanner is initialized
+            const readerElement = document.getElementById('reader');
+            readerElement.style.position = 'relative';
+            readerElement.appendChild(zoomControls);
+
+            // Get video element
+            const videoElement = readerElement.querySelector('video');
+            if (videoElement) {
+                let currentZoom = 1.0;
+
+                // Zoom in handler
+                zoomInBtn.addEventListener('click', () => {
+                    if (currentZoom < 2.0) {  // Max zoom 2x
+                        currentZoom += 0.1;
+                        videoElement.style.transform = `scale(${currentZoom})`;
+                    }
+                });
+
+                // Zoom out handler
+                zoomOutBtn.addEventListener('click', () => {
+                    if (currentZoom > 1.0) {  // Min zoom 1x
+                        currentZoom -= 0.1;
+                        videoElement.style.transform = `scale(${currentZoom})`;
+                    }
+                });
+
+                // Add transition for smooth zoom
+                videoElement.style.transition = 'transform 0.2s ease-out';
             }
         });
     }
