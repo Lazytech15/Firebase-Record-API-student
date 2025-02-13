@@ -29,6 +29,7 @@ let html5QrcodeScanner = null;
 let scannerLocked = false;
 let isScanning = false;
 let isLoading = false;
+const API_URL = 'https://project-to-ipt01.netlify.app/.netlify/functions/api';
 const scannerModal = document.getElementById('scannerModal');
 const closeScannerModal = document.querySelector('.close-scanner-modal');
 const closeScannerBtn = document.getElementById('closeScannerBtn');
@@ -427,18 +428,25 @@ async function startScanner() {
                 // Split the decoded text to get course_code and scanned section
                 const [course_code, scannedSection] = decodedText.split(',').map(item => item.trim());
                 
+                if (!course_code || !scannedSection) {
+                    throw new Error('Invalid QR code format');
+                }
+
                 if (!studentSections.includes(scannedSection)) {
                     throw new Error('You are not enrolled in this section');
                 }
         
-                // Check for existing attendance
+                // Check for existing attendance using new endpoint
+                const response = await fetch(`${API_URL}/attendance/${course_code}`);
+                if (!response.ok) {
+                    throw new Error('Failed to check attendance');
+                }
+
+                const attendanceData = await response.json();
                 const today = new Date().toISOString().split('T')[0];
-                const courseAttendanceRef = ref(database, `attendance/${course_code}`);
-                const snapshot = await get(courseAttendanceRef);
                 
-                if (snapshot.exists()) {
-                    const courseAttendanceData = snapshot.val();
-                    const existingEntry = Object.values(courseAttendanceData).find(entry => 
+                if (attendanceData) {
+                    const existingEntry = Object.values(attendanceData).find(entry => 
                         entry.studentId === studentId &&
                         entry.timeIn.startsWith(today)
                     );
@@ -452,6 +460,7 @@ async function startScanner() {
                 const attendanceEntry = {
                     studentId,
                     name,
+                    course,
                     section: scannedSection,
                     timeIn: new Date().toISOString()
                 };
@@ -466,19 +475,16 @@ async function startScanner() {
                     }
                 }
         
-                // Send attendance to server with course_code
-                const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
+                // Send attendance to server using new endpoint
+                const postResponse = await fetch(`${API_URL}/attendance/${course_code}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        course_code,
-                        attendanceData: attendanceEntry
-                    })
+                    body: JSON.stringify(attendanceEntry)
                 });
         
-                if (!response.ok) {
+                if (!postResponse.ok) {
                     throw new Error('Failed to record attendance');
                 }
         
