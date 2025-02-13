@@ -420,7 +420,7 @@ async function startScanner() {
                 const name = document.getElementById('name').value;
                 const course = document.getElementById('course').value;
                 const section = document.getElementById('section').value;
-
+        
                 // Split student's sections into array
                 const studentSections = section.split(',').map(s => s.trim());
                 
@@ -430,33 +430,32 @@ async function startScanner() {
                 if (!studentSections.includes(scannedSection)) {
                     throw new Error('You are not enrolled in this section');
                 }
-
+        
                 // Check for existing attendance
                 const today = new Date().toISOString().split('T')[0];
-                const attendanceRef = ref(database, 'attendance');
-                const snapshot = await get(attendanceRef);
+                const courseAttendanceRef = ref(database, `attendance/${course_code}`);
+                const snapshot = await get(courseAttendanceRef);
                 
                 if (snapshot.exists()) {
-                    const attendanceData = snapshot.val();
-                    const existingEntry = Object.values(attendanceData).find(entry => 
+                    const courseAttendanceData = snapshot.val();
+                    const existingEntry = Object.values(courseAttendanceData).find(entry => 
                         entry.studentId === studentId &&
                         entry.timeIn.startsWith(today)
                     );
-
+        
                     if (existingEntry) {
                         throw new Error('You have already recorded attendance for today');
                     }
                 }
                 
-                // Create attendance entry with course_code
+                // Create attendance entry
                 const attendanceEntry = {
                     studentId,
                     name,
-                    course: course_code, // Using the extracted course_code
                     section: scannedSection,
                     timeIn: new Date().toISOString()
                 };
-
+        
                 // Safely pause scanner
                 if (html5QrcodeScanner && isScanning) {
                     try {
@@ -466,23 +465,26 @@ async function startScanner() {
                         console.warn('Failed to pause scanner:', error);
                     }
                 }
-
-                // Send attendance to server
+        
+                // Send attendance to server with course_code
                 const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(attendanceEntry)
+                    body: JSON.stringify({
+                        course_code,
+                        attendanceData: attendanceEntry
+                    })
                 });
-
+        
                 if (!response.ok) {
                     throw new Error('Failed to record attendance');
                 }
-
+        
                 // Close scanner and modal after successful scan
                 closeScanner();
-
+        
                 await Swal.fire({
                     icon: 'success',
                     title: 'Success',
@@ -490,7 +492,7 @@ async function startScanner() {
                     timer: 1500,
                     showConfirmButton: false
                 });
-
+        
             } catch (error) {
                 console.error('Error:', error);
                 
