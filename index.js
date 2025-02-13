@@ -424,8 +424,8 @@ async function startScanner() {
                 // Split student's sections into array
                 const studentSections = section.split(',').map(s => s.trim());
                 
-                // Compare the scanned section with student's sections
-                const scannedSection = decodedText.trim();
+                // Split the decoded text to get course_code and scanned section
+                const [course_code, scannedSection] = decodedText.split(',').map(item => item.trim());
                 
                 if (!studentSections.includes(scannedSection)) {
                     throw new Error('You are not enrolled in this section');
@@ -448,11 +448,11 @@ async function startScanner() {
                     }
                 }
                 
-                // Create attendance entry
+                // Create attendance entry with course_code
                 const attendanceEntry = {
                     studentId,
                     name,
-                    course,
+                    course: course_code, // Using the extracted course_code
                     section: scannedSection,
                     timeIn: new Date().toISOString()
                 };
