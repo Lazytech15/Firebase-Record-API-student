@@ -415,31 +415,19 @@ async function startScanner() {
             isScanning = true;
             
             try {
-                const qrData = JSON.parse(decodedText);
-                
-                // Check if this is an attendance QR code
-                if (qrData.type !== 'attendance') {
-                    throw new Error('Invalid QR code type');
-                }
-
                 // Get current user's data
                 const studentId = document.getElementById('studentId').value;
                 const name = document.getElementById('name').value;
                 const course = document.getElementById('course').value;
                 const section = document.getElementById('section').value;
 
-                // Split both the student's sections and QR code sections
+                // Split student's sections into array
                 const studentSections = section.split(',').map(s => s.trim());
-                const qrSections = Array.isArray(qrData.section) 
-                    ? qrData.section 
-                    : [qrData.section].map(s => s.trim());
-
-                // Check if there's any matching section
-                const matchingSection = qrSections.find(qrSection => 
-                    studentSections.includes(qrSection)
-                );
-
-                if (!matchingSection) {
+                
+                // Compare the scanned section with student's sections
+                const scannedSection = decodedText.trim();
+                
+                if (!studentSections.includes(scannedSection)) {
                     throw new Error('You are not enrolled in this section');
                 }
 
@@ -452,23 +440,21 @@ async function startScanner() {
                     const attendanceData = snapshot.val();
                     const existingEntry = Object.values(attendanceData).find(entry => 
                         entry.studentId === studentId &&
-                        entry.subject === qrData.subject &&
                         entry.timeIn.startsWith(today)
                     );
 
                     if (existingEntry) {
-                        throw new Error('You have already recorded attendance for this subject today');
+                        throw new Error('You have already recorded attendance for today');
                     }
                 }
                 
-                // Create attendance entry with matching section
+                // Create attendance entry
                 const attendanceEntry = {
                     studentId,
                     name,
                     course,
-                    section: matchingSection, // Use the matching section
-                    timeIn: new Date().toISOString(),
-                    subject: qrData.subject
+                    section: scannedSection,
+                    timeIn: new Date().toISOString()
                 };
 
                 // Safely pause scanner
