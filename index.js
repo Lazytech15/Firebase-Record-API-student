@@ -395,216 +395,153 @@ async function startScanner() {
     readerDiv.classList.remove('hidden');
     
     if (html5QrcodeScanner === null) {
-        try {
-            // Add zoom controls container
-            const zoomControls = document.createElement('div');
-            zoomControls.className = 'zoom-controls';
-            zoomControls.style.cssText = `
-                position: absolute;
-                bottom: 10px;
-                left: 50%;
-                transform: translateX(-50%);
-                z-index: 1000;
-                background: rgba(0, 0, 0, 0.5);
-                padding: 5px;
-                border-radius: 20px;
-                display: flex;
-                gap: 10px;
-                align-items: center;
-            `;
+        html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader",
+            { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 },
+                showTorchButtonIfSupported: true
+            }
+        );
+
+        html5QrcodeScanner.render(async (decodedText) => {
+            // If scanner is locked, return immediately
+            if (scannerLocked) {
+                return;
+            }
             
-            // Create zoom buttons
-            const zoomInBtn = document.createElement('button');
-            zoomInBtn.innerHTML = '🔍+';
-            zoomInBtn.className = 'zoom-btn';
-            zoomInBtn.style.cssText = `
-                background: white;
-                border: none;
-                border-radius: 50%;
-                width: 30px;
-                height: 30px;
-                cursor: pointer;
-                font-size: 14px;
-            `;
-
-            const zoomOutBtn = document.createElement('button');
-            zoomOutBtn.innerHTML = '🔍-';
-            zoomOutBtn.className = 'zoom-btn';
-            zoomOutBtn.style.cssText = zoomInBtn.style.cssText;
-
-            zoomControls.appendChild(zoomOutBtn);
-            zoomControls.appendChild(zoomInBtn);
-
-            // Initialize scanner with a larger QR box
-            html5QrcodeScanner = new Html5QrcodeScanner(
-                "reader",
-                { 
-                    fps: 10, 
-                    qrbox: { width: 350, height: 350 },
-                    showTorchButtonIfSupported: true,
-                    aspectRatio: 1.0,
-                    zoom: 1.0
-                }
-            );
-
-            // Setup success callback
-            const onScanSuccess = async (decodedText) => {
-                // If scanner is locked, return immediately
-                if (scannerLocked) return;
-                scannerLocked = true;
-                isScanning = true;
+            // Lock the scanner
+            scannerLocked = true;
+            isScanning = true;
+            
+            try {
+                const qrData = JSON.parse(decodedText);
                 
-                try {
-                    const qrData = JSON.parse(decodedText);
-                    
-                    // Check if this is an attendance QR code
-                    if (qrData.type !== 'attendance') {
-                        throw new Error('Invalid QR code type');
-                    }
+                // Check if this is an attendance QR code
+                if (qrData.type !== 'attendance') {
+                    throw new Error('Invalid QR code type');
+                }
 
-                    // Get current user's data
-                    const studentId = document.getElementById('studentId').value;
-                    const name = document.getElementById('name').value;
-                    const course = document.getElementById('course').value;
-                    const section = document.getElementById('section').value;
+                // Get current user's data
+                const studentId = document.getElementById('studentId').value;
+                const name = document.getElementById('name').value;
+                const course = document.getElementById('course').value;
+                const section = document.getElementById('section').value;
 
-                    // Split both the student's sections and QR code sections
-                    const studentSections = section.split(',').map(s => s.trim());
-                    const qrSections = Array.isArray(qrData.section) 
-                        ? qrData.section 
-                        : [qrData.section].map(s => s.trim());
+                // Split both the student's sections and QR code sections
+                const studentSections = section.split(',').map(s => s.trim());
+                const qrSections = Array.isArray(qrData.section) 
+                    ? qrData.section 
+                    : [qrData.section].map(s => s.trim());
 
-                    // Check if there's any matching section
-                    const matchingSection = qrSections.find(qrSection => 
-                        studentSections.includes(qrSection)
+                // Check if there's any matching section
+                const matchingSection = qrSections.find(qrSection => 
+                    studentSections.includes(qrSection)
+                );
+
+                if (!matchingSection) {
+                    throw new Error('You are not enrolled in this section');
+                }
+
+                // Check for existing attendance
+                const today = new Date().toISOString().split('T')[0];
+                const attendanceRef = ref(database, 'attendance');
+                const snapshot = await get(attendanceRef);
+                
+                if (snapshot.exists()) {
+                    const attendanceData = snapshot.val();
+                    const existingEntry = Object.values(attendanceData).find(entry => 
+                        entry.studentId === studentId &&
+                        entry.subject === qrData.subject &&
+                        entry.timeIn.startsWith(today)
                     );
 
-                    if (!matchingSection) {
-                        throw new Error('You are not enrolled in this section');
+                    if (existingEntry) {
+                        throw new Error('You have already recorded attendance for this subject today');
                     }
-
-                    // Check for existing attendance
-                    const today = new Date().toISOString().split('T')[0];
-                    const attendanceRef = ref(database, 'attendance');
-                    const snapshot = await get(attendanceRef);
-                    
-                    if (snapshot.exists()) {
-                        const attendanceData = snapshot.val();
-                        const existingEntry = Object.values(attendanceData).find(entry => 
-                            entry.studentId === studentId &&
-                            entry.subject === qrData.subject &&
-                            entry.timeIn.startsWith(today)
-                        );
-
-                        if (existingEntry) {
-                            throw new Error('You have already recorded attendance for this subject today');
-                        }
-                    }
-                    
-                    // Create attendance entry with matching section
-                    const attendanceEntry = {
-                        studentId,
-                        name,
-                        course,
-                        section: matchingSection,
-                        timeIn: new Date().toISOString(),
-                        subject: qrData.subject
-                    };
-
-                    // Safely pause scanner
-                    if (html5QrcodeScanner && isScanning) {
-                        try {
-                            await html5QrcodeScanner.pause(true);
-                            isScanning = false;
-                        } catch (error) {
-                            console.warn('Failed to pause scanner:', error);
-                        }
-                    }
-
-                    // Send attendance to server
-                    const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(attendanceEntry)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error('Failed to record attendance');
-                    }
-
-                    // Close scanner and modal after successful scan
-                    await closeScanner();
-
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Success',
-                        text: 'Attendance recorded successfully!',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-
-                } catch (error) {
-                    console.error('Error:', error);
-                    await Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: error.message || 'Failed to process QR code'
-                    });
-                } finally {
-                    setTimeout(() => {
-                        scannerLocked = false;
-                    }, 2000);
                 }
-            };
+                
+                // Create attendance entry with matching section
+                const attendanceEntry = {
+                    studentId,
+                    name,
+                    course,
+                    section: matchingSection, // Use the matching section
+                    timeIn: new Date().toISOString(),
+                    subject: qrData.subject
+                };
 
-            // Setup error callback
-            const onScanError = (error) => {
-                console.warn(`Code scan error = ${error}`);
-            };
-
-            // Render the scanner
-            await html5QrcodeScanner.render(onScanSuccess, onScanError);
-
-            // Add zoom controls after scanner is initialized
-            const readerElement = document.getElementById('reader');
-            readerElement.style.position = 'relative';
-            readerElement.appendChild(zoomControls);
-
-            // Setup zoom controls
-            const videoElement = readerElement.querySelector('video');
-            if (videoElement) {
-                let currentZoom = 1.0;
-
-                // Zoom in handler
-                zoomInBtn.addEventListener('click', () => {
-                    if (currentZoom < 2.0) {  // Max zoom 2x
-                        currentZoom += 0.1;
-                        videoElement.style.transform = `scale(${currentZoom})`;
+                // Safely pause scanner
+                if (html5QrcodeScanner && isScanning) {
+                    try {
+                        await html5QrcodeScanner.pause(true);
+                        isScanning = false;
+                    } catch (error) {
+                        console.warn('Failed to pause scanner:', error);
                     }
+                }
+
+                // Send attendance to server
+                const response = await fetch('https://project-to-ipt01.netlify.app/.netlify/functions/api/attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(attendanceEntry)
                 });
 
-                // Zoom out handler
-                zoomOutBtn.addEventListener('click', () => {
-                    if (currentZoom > 1.0) {  // Min zoom 1x
-                        currentZoom -= 0.1;
-                        videoElement.style.transform = `scale(${currentZoom})`;
-                    }
+                if (!response.ok) {
+                    throw new Error('Failed to record attendance');
+                }
+
+                // Close scanner and modal after successful scan
+                closeScanner();
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Attendance recorded successfully!',
+                    timer: 1500,
+                    showConfirmButton: false
                 });
 
-                // Add transition for smooth zoom
-                videoElement.style.transition = 'transform 0.2s ease-out';
+            } catch (error) {
+                console.error('Error:', error);
+                
+                // Safely pause scanner
+                if (html5QrcodeScanner && isScanning) {
+                    try {
+                        await html5QrcodeScanner.pause(true);
+                        isScanning = false;
+                    } catch (pauseError) {
+                        console.warn('Failed to pause scanner:', pauseError);
+                    }
+                }
+                
+                await Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                
+                // Safely resume scanner
+                if (html5QrcodeScanner && !isScanning) {
+                    try {
+                        await html5QrcodeScanner.resume();
+                        isScanning = true;
+                    } catch (resumeError) {
+                        console.warn('Failed to resume scanner:', resumeError);
+                    }
+                }
+            } finally {
+                // Unlock the scanner after processing is complete
+                setTimeout(() => {
+                    scannerLocked = false;
+                }, 2000); // 2 second delay before allowing new scans
             }
-
-        } catch (error) {
-            console.error('Failed to initialize scanner:', error);
-            await Swal.fire({
-                icon: 'error',
-                title: 'Scanner Error',
-                text: 'Failed to initialize the QR code scanner. Please try again.'
-            });
-        }
+        });
     }
 }
 
